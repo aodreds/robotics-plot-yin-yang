@@ -1,0 +1,103 @@
+%%% sarazut pongsanthia m5842445 %%%
+%%% final examination robotic %%%
+
+%%% draw zin and zang with articulated arm 3 dof %%%%%%
+
+L1 = 0; L2 = 100; L3 = 50; %%% max workspace r = L2+L3 = 150
+
+%%% allocate data %%%
+q1 = zeros(1,100);  q2 = zeros(1,100);  q3 = zeros(1,100);
+alpha = zeros(1,4680);  beta = zeros(1,4680);
+
+%%% draw outer circle %%%
+t1 = linspace(pi/2,2.5*pi,360);
+h1 = 100;   %% origin of x-axis %%
+k1 = 100;  %% origin of z-axis %%
+r1 = 50;    %% radius %%
+x1 = r1*cos(t1)+h1; 
+z1 = r1*sin(t1)+k1;
+
+%%% draw upper half circle turn 90 to 270 %%%
+t2 = linspace(pi/2,3*pi/2,180);
+h2 = h1 ;   %% origin of x-axis %%
+k2 = k1 + r1/2;  %% origin of z-axis %%
+r2 = r1/2;    %% radius %%
+x2 = r2*cos(t2)+h2; 
+z2 = r2*sin(t2)+k2;
+
+%%% draw lower half circle 90 to -90 %%%
+t3 = linspace(pi/2,-pi/2,180);
+h3 = h1 ;   %% origin of x-axis %%
+k3 = k1 - r1/2;  %% origin of z-axis %%
+r3 = r1/2;    %% radius %%
+x3 = r3*cos(t3)+h3; 
+z3 = r3*sin(t3)+k3;
+
+%%% draw upper small circle %%%
+t4 = linspace(0,2*pi,360);
+h4 = h1 ;   %% origin of x-axis %%
+k4 = k1 - r1/2;  %% origin of z-axis %%
+r4 = r1/8;    %% radius %%
+x4 = r4*cos(t4)+h4; 
+z4 = r4*sin(t4)+k4;
+
+%%% draw lower small circle %%%
+t5 = linspace(0,2*pi,360);
+h5 = h1 ;   %% origin of x-axis %%
+k5 = k1 + r1/2;  %% origin of z-axis %%
+r5 = r1/8;    %% radius %%
+x5 = r5*cos(t5)+h5; 
+z5 = r5*sin(t5)+k5;
+
+%%% gather all point to a matrix %%%
+mcircle = [x1' z1'; x2' z2'; x3' z3'; x4' z4'; x5' z5'];
+x = mcircle(:,1);
+z = mcircle(:,2);
+y = zeros(length(x),1);
+
+figure(1);
+plot3(x,y,z,'x')  
+axis equal 
+
+xlabel('x-axis')  %%% label for plot%%%
+ylabel('y-axis')
+zlabel('Z-axis')
+title('Yin and Yang')
+axis([0,200, -1,1, 0,200])  %%% limit for plot area %%%
+grid on
+
+%%% inverse cartesian to theta q1, q2, q3 %%%
+for i = 1 : length(x)
+        x(i) = x(i);    %fprintf('Print x: %d\n',x)
+        y(i) = y(i);
+        z(i) = z(i);  
+        
+        alpha(i) = sqrt(x(i)^2 + y(i)^2);
+        beta(i) = (alpha(i)^2 + z(i)^2 + L2^2 + L3^2)/(2*L2);
+                
+        %%% RADIAN %%%
+        q1(i) = (atan2(y(i),x(i)))*180/pi;
+        q2(i) = (atan2(beta(i),real(sqrt(z(i)^2 + alpha(i)^2 - beta(i)^2))))*180/pi - atan2(alpha(i),z(i))*180/pi;
+        q3(i) = (atan2((z(i)-(L2*sind(q2(i)))),(alpha(i)-(L2*cosd(q2(i))))))*180/pi - q2(i);    
+        
+        q1(i) = q1(i) + (q1(i) < 0)*360;
+        q3(i) = q3(i) + (q3(i) < 0)*360;
+        q2(i) = q2(i) + (q2(i) < 0)*360;                           
+end
+
+%%% plot degree and position of articulated arm %%%"
+figure(2);
+t = linspace(1,length(x),length(x));
+plot(t,q1,'x', t,q2,'rx', t,q3,'gx')   
+
+%%% define graph label %%%
+zlabel('Degree')
+xlabel('Position') 
+legend('Theta Q1','Theta Q2','Theta Q3')
+title('Degree and Position')
+grid on
+
+%%%% save as .csv file %%%%
+position = [x z z];
+dlmwrite('zin_and_zang.csv', position, 'precision', '%.8f', 'newline', 'pc')
+msgbox('Position zin and zang Saved Completed As File Name: "zin_and_zang.csv"');
